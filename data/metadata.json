@@ -1,0 +1,24 @@
+{
+  "name": "Absolute Position Dot",
+  "paper": {
+    "title": "An intriguing failing of convolutional neural networks and the CoordConv solution",
+    "arxiv": "https://arxiv.org/abs/1807.03247"
+  },
+  "hypothesis": "Models built only from ordinary convolutions struggle when the correct answer depends on absolute spatial position; explicit coordinate channels should help.",
+  "image_size": 32,
+  "grid_size": 4,
+  "position_classes": 16,
+  "splits": {
+    "position_train": 2304,
+    "position_test_iid": 576,
+    "position_test_checker": 576,
+    "shape_control_train": 2304,
+    "shape_control_test": 576
+  },
+  "config": {
+    "seed": 20260616,
+    "samples_per_bin": 180,
+    "test_fraction": 0.2,
+    "noise_prob": 0.01
+  }
+}

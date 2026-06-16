@@ -1,0 +1,6 @@
+split,samples,task,position_classes,shape_classes,min_position_count,max_position_count,min_shape_count,max_shape_count
+position_train,2304,absolute_position,16,1,144,144,0,2304
+position_test_iid,576,absolute_position,16,1,36,36,0,576
+position_test_checker,576,absolute_position,16,1,36,36,0,576
+shape_control_train,2304,shape_control,16,2,144,144,1152,1152
+shape_control_test,576,shape_control,16,2,36,36,288,288
