@@ -2,9 +2,11 @@
 
 ## Motivation
 
-Convolutional neural networks share filters across image locations. This is useful when the same visual pattern should mean the same thing everywhere. However, some visual tasks require absolute spatial position. For example, a model may need to know whether an object is in the top-left or bottom-right part of an image, not only what the object looks like.
+Some image labels depend on **what** is visible. Other labels depend on **where** it is visible. This post studies the second case: absolute spatial position, meaning the fixed `(x, y)` location of an object in the image.
 
-Liu et al. study this issue in [**An intriguing failing of convolutional neural networks and the CoordConv solution**](https://arxiv.org/abs/1807.03247). In the abstract, they introduce the coordinate-transform problem: mapping between Cartesian `(x, y)` coordinates and pixel-space representations. They state that ordinary convolutional networks fail on this apparently simple problem. In Section 4, they test this claim with supervised coordinate classification and coordinate regression. CoordConv addresses the problem by adding fixed coordinate channels to a convolutional layer.
+Liu et al. study this issue in [**An intriguing failing of convolutional neural networks and the CoordConv solution**](https://arxiv.org/abs/1807.03247). Their paper defines the coordinate-transform problem: mapping between Cartesian coordinates, such as `(x, y)`, and pixel-space representations, such as an image with one active pixel. The paper states in the abstract that ordinary convolutional networks fail on this apparently simple problem. Section 4 then tests this claim with supervised coordinate classification and coordinate regression.
+
+CoordConv is the paper's proposed fix. It adds fixed coordinate channels to a convolutional layer, so the model can directly access absolute position.
 
 ## Hypothesis
 
@@ -12,37 +14,60 @@ This control dataset evaluates one hypothesis:
 
 > Explicit coordinate information helps convolutional networks when the correct label depends on absolute spatial position.
 
-## Dataset
+## Control Dataset
 
 The dataset is called **Absolute Position Dot**. Each sample is a 32 x 32 grayscale image with one small marker.
 
-The main task is absolute-position prediction. The marker is always a square, and the label is the marker's cell in a 4 x 4 grid. There are 16 balanced position classes.
+Main task:
 
-The control task is shape prediction. The marker is either a square or a plus, and the label is the marker shape. Position is balanced but irrelevant.
+- Input: an image with one square marker.
+- Label: the marker's cell in a fixed 4 x 4 position grid.
+- Classes: 16 balanced absolute-position classes.
+
+Control task:
+
+- Input: an image with one square or plus marker.
+- Label: marker shape.
+- Position: balanced but irrelevant to the label.
+
+The main task tests absolute position. The control task checks that the generated images are learnable when the label does not require absolute position.
 
 ## Examples
 
-Position task examples:
-
 ![Position examples](data/examples/position_train_preview.png)
 
-Shape-control examples:
+**Figure 1. Position-task examples.** Each image contains the same square marker style. The label changes only because the marker appears in a different absolute position.
 
 ![Shape-control examples](data/examples/shape_control_train_preview.png)
 
-## Why This Precisely Tests The Hypothesis
+**Figure 2. Shape-control examples.** The marker position varies, but the label is only square versus plus. This checks that the image-generation process itself is not the intended difficulty.
 
-The main task isolates absolute position. The marker appearance, marker brightness, image size, number of objects, noise level, and class counts are fixed or balanced. The only information needed for the label is where the marker is.
+![Held-out position examples](data/examples/position_test_checker_preview.png)
 
-The shape-control task checks that the image-generation process itself is not the source of difficulty. If a standard CNN can classify marker shape but struggles more with position labels, the likely cause is the need to use absolute spatial position.
+**Figure 3. Held-out-position examples.** These samples use the same label rule as the main task, but use held-out checkerboard positions. This split tests whether a model learned the position rule rather than only memorizing sampled coordinates.
 
-The dataset therefore tests the property motivated by CoordConv without recreating the paper's original dataset.
+## Why The Dataset Matches The Hypothesis
+
+The main task isolates the property from the hypothesis: absolute spatial position.
+
+Fixed or balanced factors:
+
+- image size: 32 x 32 pixels;
+- number of objects: one marker;
+- marker brightness: fixed;
+- main-task marker shape: fixed square;
+- noise level: fixed sparse low-intensity noise;
+- class counts: balanced across all 16 position labels.
+
+Only the marker's absolute position determines the main-task label. Therefore, a model must use where the marker is, not what the marker looks like.
+
+The control task changes the label from position to shape. If a standard CNN handles the shape-control task but struggles more on the position task, the likely difficulty is absolute position use.
 
 ## Difference From The Paper Dataset
 
-The CoordConv paper uses **Not-so-Clevr**, a dataset of 64 x 64 images with 9 x 9 squares. The paper evaluates coordinate-to-pixel classification, pixel-to-coordinate regression, and square rendering.
+The CoordConv paper uses **Not-so-Clevr**, a dataset of 64 x 64 images with 9 x 9 squares. Its tasks include coordinate-to-pixel classification, pixel-to-coordinate regression, and square rendering.
 
-Absolute Position Dot is different. It uses smaller marker images, position-bin labels, a held-out-position split, and a shape-control split. It tests the same underlying property, dependence on absolute position, with a new controlled dataset.
+Absolute Position Dot does not recreate Not-so-Clevr. It tests the same paper-motivated property with a different controlled dataset: small marker images, position-bin labels, a held-out-position split, and a shape-control split.
 
 ## Generation
 
@@ -56,19 +81,11 @@ For each sample, the generator:
 4. Adds sparse low-intensity pixel noise.
 5. Saves the image, exact coordinate, normalized coordinate, position label, and shape label.
 
-The generator uses a fixed seed, so the dataset can be regenerated exactly:
+The generator uses fixed seed `20260616`. The dataset can be regenerated with:
 
 ```bash
 python main.py
 ```
-
-The generated files include:
-
-- compressed NumPy arrays in `data/*.npz`;
-- a human-readable manifest in `data/annotations.csv`;
-- a balance summary in `data/split_summary.csv`;
-- preview examples in `data/examples/`;
-- metadata in `data/metadata.json`.
 
 The dataset can be checked with:
 
@@ -76,7 +93,18 @@ The dataset can be checked with:
 python validate.py
 ```
 
+The generated files are:
+
+- `data/*.npz`: compressed NumPy arrays for ML use;
+- `data/annotations.csv`: one human-readable row per sample;
+- `data/split_summary.csv`: split sizes and class balance;
+- `data/metadata.json`: hypothesis and generation settings;
+- `data/examples/*.png`: preview images.
+
 ## Links
 
 - Paper: https://arxiv.org/abs/1807.03247
-- Code and dataset: TODO add GitHub repository link after pushing
+- Generator code: [src/generate_absolute_position_dot.py](src/generate_absolute_position_dot.py)
+- Validation code: [src/validate_dataset.py](src/validate_dataset.py)
+- Dataset files: [data/](data/)
+- GitHub repository: https://github.com/Vlad13503/absolute-position-dot-control-dataset
