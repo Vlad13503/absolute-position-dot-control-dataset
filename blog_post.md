@@ -104,7 +104,7 @@ The generated files are:
 ## Links
 
 - Paper: https://arxiv.org/abs/1807.03247
-- Generator code: [src/generate_absolute_position_dot.py](src/generate_absolute_position_dot.py)
-- Validation code: [src/validate_dataset.py](src/validate_dataset.py)
-- Dataset files: [data/](data/)
 - GitHub repository: https://github.com/Vlad13503/absolute-position-dot-control-dataset
+- Generator code: https://github.com/Vlad13503/absolute-position-dot-control-dataset/blob/main/src/generate_absolute_position_dot.py
+- Validation code: https://github.com/Vlad13503/absolute-position-dot-control-dataset/blob/main/src/validate_dataset.py
+- Dataset files: https://github.com/Vlad13503/absolute-position-dot-control-dataset/tree/main/data
